@@ -1,0 +1,168 @@
+  Widget getList(BuildContext context) {
+    //var pgbloc = PglistBloc(context);
+
+    //debugPrint('HWListView $hashCode');
+
+    final bloc = BlocProvider.of<HwlistBloc>(context);
+    final pgbloc = BlocProvider.of<PglistBloc>(context);
+    int loadMoreCount = 10;
+
+    if (bloc.state is! HwlistLoaded) {
+      bloc.add(HwlistLoad());
+    }
+    return BlocConsumer<HwlistBloc, HwlistState>(
+      listener: (context, state) {
+        // if ( state is HwlistLoaded ) {
+        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        //     content: Text('Загрузка буфера: ${state.store.getRowsCount} из ${state.store.getTotal} ...')));
+        // }
+      },
+      builder: (context, state) {
+        if (state is HwlistLoaded) {
+          if (state.getLastOperation == 1) {
+            pgbloc.state.store.setListCount = loadMoreCount;
+          }
+          return BlocConsumer<PglistBloc, PglistState>(
+            listener: (context, pgstate) {},
+            builder: (context, pgstate) {
+              return SizedBox(
+                width: 600,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: 
+                  
+                  ListView.separated(
+                    itemCount: pgstate.store.getListCount >
+                            state.store.getRowsCount
+                        ? state.store.getRowsCount + 1
+                        : pgstate.store.getListCount + 1,
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Divider(height: 4),
+                    itemBuilder: (context, index) {
+                      final rCount = pgstate.store.getListCount >
+                              state.store.getRowsCount
+                          ? state.store.getRowsCount
+                          : pgstate.store
+                              .getListCount; //pgstate.store.getListCount; //state.store.getRowsCount;
+                      final rTotal = state.store.getTotal;
+                      //int rIndex = index;
+                      if (index == rCount) {
+                        return rTotal > rCount
+                            ? Center(
+                                child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    0, 20, 0, 20),
+                                child: FilledButton(
+                                  child: Text(
+                                      "Еще ${rTotal - rCount >= loadMoreCount ? loadMoreCount : rTotal - rCount} из ${rTotal - rCount} ..."),
+                                  onPressed: () /*async*/ {
+                                    if ((rCount + loadMoreCount) >
+                                        state.store.getRowsCount) {
+                                      BlocProvider.of<HwlistBloc>(context)
+                                          .add(HwlistLoadMore(50));
+                                    }
+                                    BlocProvider.of<PglistBloc>(context)
+                                        .add(PglistRebuild(
+                                            addCount: loadMoreCount));
+                                    //BlocProvider.of<HwlistBloc>(context).add(HwlistLoadMore(loadMoreCount));
+                                    //
+                                    //await bloc.stream.firstWhere((state) => state is HwlistLoaded,);
+                                    //debugPrint('QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ');
+                                  },
+                                ),
+                              ))
+                            : const SizedBox(
+                                width: 40,
+                                height: 40,
+                              );
+                      }
+                  
+                      final row = bloc.state.store.getRows[index];
+                      //
+                      final hwInvnum = row['hw_invnum'];
+                      final hwRoom = row['hw_room'] ?? '';
+                      final stateId = row['hw_state_id'];
+                      //final typeDesc = row['type_desc'];
+                      final cfgiDesc = row['cfgi_desc'];
+                      //final deptDesc = row['dept_desc'];
+                      //final stateDesc = row['state_desc'];
+                      return ListTile(
+                          titleAlignment: ListTileTitleAlignment.center,
+                          //isThreeLine: true,
+                          dense: true,
+                          title: Text(
+                              '$hwInvnum${stateId as int != 1 ? "*" : ""}',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary)),
+                          subtitle: Text('$cfgiDesc'),
+                          leading: Container(
+                            //color: Theme.of(context).colorScheme.primary ,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
+                              //border: Border.all( width: 0.5 ),
+                              borderRadius: const BorderRadius.all(
+                                  Radius.circular(12.0)),
+                            ),
+                  
+                            child: SizedBox(
+                              width: 40,
+                              child: Center(
+                                child: Text('$hwRoom',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer)),
+                              ),
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.arrow_forward_ios,
+                              color: Theme.of(context).dividerColor,
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return HwlistDetailDialog(
+                                      index: index,
+                                    );
+                                  });
+                            },
+                          ),
+                          contentPadding:
+                              const EdgeInsets.only(left: 20, right: 20));
+                    },
+                  ),
+
+
+                ),
+              );
+            },
+          );
+        }
+        if (bloc.state is HwlistFailure) {
+          return Center(child: Text('Error: ${bloc.state.getError}'));
+        }
+
+        if (bloc.state is HwlistLoading || bloc.state is HwlistInitial) {
+          //debugPrint('HWLIST STATE ${bloc.state}');
+
+          if (BlocProvider.of<HwdictBloc>(context).state is! HwdictLoaded) {
+            BlocProvider.of<HwdictBloc>(context).add(HwdictLoad());
+          }
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return const Center(child: Text('Нет данных'));
+      },
+    );
+  }
