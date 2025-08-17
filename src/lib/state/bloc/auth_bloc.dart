@@ -11,19 +11,30 @@ part 'auth_state.dart';
 //
 //
 //
+// const authGQL = 
+// r'''
+// query login($email: String!, $password: String!) {
+//   loginNhost(credentials: {email: $email, password: $password }) {
+//     session {
+//       accessToken
+//       user {
+//         roles
+//         defaultRole
+//         displayName
+//         createdAt
+//         email
+//       }
+//     }
+//   }
+// }
+// '''
+// ;
 const authGQL = 
 r'''
 query login($email: String!, $password: String!) {
   loginNhost(credentials: {email: $email, password: $password }) {
     session {
       accessToken
-      user {
-        roles
-        defaultRole
-        displayName
-        createdAt
-        email
-      }
     }
   }
 }

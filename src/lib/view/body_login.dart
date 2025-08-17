@@ -169,9 +169,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (isWebJS || isWebWasm) {
       platform = isWebWasm ? 'WEB (WebAssembly)' : 'WEB (JavaScript)';
     } else {
-      platform = '${Platform.operatingSystem}: ${Platform.operatingSystemVersion}';
+      platform = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
     }
-    return 'Платформа $platform';
+    return 'Платформа $platform\nAPI: $linkAPI';
   }
 
 
